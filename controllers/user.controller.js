@@ -66,8 +66,9 @@ const deleteUser = async (req = request, res = response) => {
 
     // Virtual Delete
     const user = await User.findByIdAndUpdate(id, { status: false });
+    const userAuth = req.user;
 
-    res.json(user);
+    res.json({user, userAuth});
 };
 
 module.exports = {
