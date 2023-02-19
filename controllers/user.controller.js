@@ -1,39 +1,73 @@
 const { response, request } = require('express');
+const bcrypt = require('bcrypt');
+const User = require('../models/user');
 
-const getUser = (req = request, res = response) => {
+const getUser = async (req = request, res = response) => {
+    const { limit = 5, from = 0 } = req.query;
+    const query = { status: true };
 
-    const { apiKey } = req.query;
+    const [total, users] = await Promise.all([
+        User.countDocuments(query),
+        User.find(query)
+            .skip(Number(from))
+            .limit(Number(limit))
+    ]);
 
     res.json({
-        msg: 'GET API',
-        apiKey
+        total,
+        users
     });
 };
 
-const postUser = (req = request, res = response) => {
-    const { nombre, edad } = req.body;
+const postUser = async (req = request, res = response) => {
+    const { name, email, password, role } = req.body;
+    const user = new User({
+        name,
+        email,
+        password,
+        role
+    });
+
+    // Crypto password
+    const salt = bcrypt.genSaltSync();
+    user.password = bcrypt.hashSync(password, salt);
+    
+    await user.save();
 
     res.json({
-        msg: 'POST API',
-        nombre,
-        edad
+        user
     });
 };
 
-const putUser = (req = request, res = response) => {
+const putUser = async (req = request, res = response) => {
 
-    const id = req.params.id;
+    const { id } = req.params;
+    const { password, google, ...user } = req.body;
+
+    if (password) {
+        // Crypto password
+        const salt = bcrypt.genSaltSync();
+        user.password = bcrypt.hashSync(password, salt);        
+    }
+
+    const userDB = await User.findByIdAndUpdate(id, user);
 
     res.json({
-        msg: 'PUT API',
-        id
+        userDB
     });
 };
 
-const deleteUser = (req = request, res = response) => {
-    res.json({
-        msg: 'DELETE API'
-    });
+const deleteUser = async (req = request, res = response) => {
+
+    const { id } = req.params;
+
+    // Physical Delete
+    // const user = await User.findByIdAndDelete(id);
+
+    // Virtual Delete
+    const user = await User.findByIdAndUpdate(id, { status: false });
+
+    res.json(user);
 };
 
 module.exports = {
