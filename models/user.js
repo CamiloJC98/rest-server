@@ -12,7 +12,7 @@ const UserSchema = Schema({
     },
     password: {
         type: String,
-        required: [true, 'The password is required'],
+        required: [this.google === false, 'The password is required'],
     },
     image: {
         type: String
@@ -20,7 +20,8 @@ const UserSchema = Schema({
     role: {
         type: String,
         required: [true, 'The role is required'],
-        emun: ['ADMIN_ROLE', 'USER_ROLE']
+        emun: ['ADMIN_ROLE', 'USER_ROLE'],
+        default: 'USER_ROLE'
     },
     status: {
         type: Boolean,
@@ -28,7 +29,7 @@ const UserSchema = Schema({
     },
     google: {
         type: Boolean,
-        default: true
+        default: false
     },
 });
 
